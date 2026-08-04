@@ -1,0 +1,104 @@
+# OpenShift Job that clones the repo and runs the Playwright E2E suite.
+#
+# Setup:
+#   oc new-project playwright-e2e-tests
+#   # Playwright Chromium needs OS libs via microdnf (root). Restricted SCC blocks that:
+#   oc adm policy add-scc-to-user anyuid -z default -n playwright-e2e-tests
+#   oc create secret generic run-tests-env --from-env-file=tests/.env -n playwright-e2e-tests
+#   oc apply -f scripts/run-tests-job.yaml
+#   oc logs -f job/run-tests-job -c e2e-tests -n playwright-e2e-tests
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: run-tests-job
+  namespace: playwright-e2e-tests
+  labels:
+    app: run-tests-job
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: run-tests-job
+    spec:
+      restartPolicy: Never
+      # Root required for microdnf (Playwright OS deps). Needs anyuid SCC — see header.
+      securityContext:
+        runAsUser: 0
+      volumes:
+        - name: workspace
+          emptyDir: {}
+      initContainers:
+        - name: clone-repo
+          image: alpine/git:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              REPO_URL="https://github.com/redhat-ai-dev/ai-rolling-demo-gitops.git"
+              BRANCH="feat/migrate-e2e-to-playwright-ts"
+              echo "Cloning ${REPO_URL} (branch ${BRANCH})..."
+              git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" /workspace/repo
+      containers:
+        - name: e2e-tests
+          image: registry.access.redhat.com/ubi10/nodejs-24:1785835837
+          imagePullPolicy: IfNotPresent
+          workingDir: /workspace/repo
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+          envFrom:
+            - secretRef:
+                name: run-tests-env
+          env:
+            - name: PLAYWRIGHT_HEADLESS
+              value: "true"
+            - name: HOME
+              value: /workspace
+            - name: npm_config_cache
+              value: /workspace/.npm
+          resources:
+            requests:
+              cpu: "500m"
+              memory: 2Gi
+              ephemeral-storage: 2Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+              ephemeral-storage: 4Gi
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+
+              echo "Installing Chromium OS libraries (minimal RHEL/UBI set)..."
+              # Avoid gtk3 — it pulls gstreamer1, which often fails on UBI appstream.
+              # Chromium headless shell needs nspr/nss + X11/GBM/audio basics only.
+              PKGS=(
+                nspr nss dbus-libs atk at-spi2-atk at-spi2-core cups-libs
+                libXcomposite libXdamage libXext libXfixes libXrandr
+                mesa-libgbm cairo pango alsa-lib libdrm libxkbcommon
+              )
+              if command -v microdnf >/dev/null 2>&1; then
+                microdnf install -y --setopt=install_weak_deps=0 "${PKGS[@]}"
+                microdnf clean all
+              elif command -v dnf >/dev/null 2>&1; then
+                dnf install -y --setopt=install_weak_deps=0 "${PKGS[@]}"
+                dnf clean all
+              else
+                echo "Neither microdnf nor dnf found; cannot install Playwright OS deps." >&2
+                exit 1
+              fi
+
+              echo "Running tests (scripts/run-tests.sh)..."
+              bash scripts/run-tests.sh
