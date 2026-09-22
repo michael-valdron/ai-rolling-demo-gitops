@@ -74,6 +74,11 @@ export KUBEFLOW_MODEL_CATALOG_URL=
 export BOOST_OGX_URL=https://llamastack-llamastack.apps.rosa.redhat-ai-dev.m6no.p3.openshiftapps.com
 export BOOST_MODEL=openai/vllm-inference/gpt-4.1
 
+# MCP Registry Provider
+# MCP_REGISTRY_URL: base URL of the target MCP Registry to ingest MCP server entries from the endpoints
+# For example, https://staging.registry.modelcontextprotocol.io
+export MCP_REGISTRY_URL=
+
 # GPU Setup (NFD + NVIDIA GPU Operator)
 # Set to "true" to skip Node Feature Discovery and NVIDIA GPU operator installation
 # while still allowing RHOAI setup. RHOAI can run without GPU for non-inference workloads.
