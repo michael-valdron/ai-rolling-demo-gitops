@@ -151,6 +151,14 @@ kubectl create secret generic "$SECRET_NAME" \
     --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
 log "Secret $SECRET_NAME created successfully."
 
+SECRET_NAME="mcp-registry-secrets"
+kubectl create secret generic "$SECRET_NAME" \
+    --namespace="$RHDH_NAMESPACE" \
+    --from-literal=MCP_REGISTRY_URL="${MCP_REGISTRY_URL}" \
+    --from-literal=MCP_REGISTRY_HOST="${MCP_REGISTRY_URL#*://}" \
+    --dry-run=client -o yaml | kubectl apply --filename - --overwrite=true >/dev/null
+log "Secret $SECRET_NAME created successfully."
+
 SECRET_NAME="ai-rh-developer-hub-env"
 log "Creating $SECRET_NAME secret..."
 kubectl create secret generic "$SECRET_NAME" \

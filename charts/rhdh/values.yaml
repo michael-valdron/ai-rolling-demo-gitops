@@ -77,6 +77,10 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.6__0.5.2
         disabled: false
 
+      # MCP Registry Provider Catalog Plugin
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-mcp-registry-provider:bs_1.54.6__0.2.1
+        disabled: false
+
       # Boost Plugins
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-boost:bs_1.54.6__0.6.0
         disabled: false
@@ -417,6 +421,26 @@ backstage:
                   kubeflow-model-catalog-url: '${KUBEFLOW_MODEL_CATALOG_URL:-}'
                   default-owner: '${OWNER:-default-owner}'
                   default-lifecycle: '${LIFECYCLE:-production}'
+            mcpRegistry:
+              mcpRegistry:
+                baseUrl: '${MCP_REGISTRY_URL}'
+                apiVersion: v0.1
+                defaultOwner: '${OWNER:-default-owner}'
+                defaultLifecycle: '${LIFECYCLE:-production}'
+                pageLimit: 10
+                pageSize: 50
+                maxEntries: 5000
+                remotesOnly: false
+                latestVersion: false
+                hostAllowList:
+                  - '${MCP_REGISTRY_HOST}'
+                schedule:
+                  frequency:
+                    minutes: 30
+                  timeout:
+                    minutes: 3
+                  initialDelay:
+                    seconds: 15
             github:
               providerId:
                 organization: "${GITOPS_GIT_ORG}"
@@ -740,6 +764,7 @@ backstage:
         - lightspeed-secrets
         - llama-stack-secrets
         - kserve-connector-secrets
+        - mcp-registry-secrets
       args:
         - "--config"
         - dynamic-plugins-root/app-config.dynamic-plugins.yaml
