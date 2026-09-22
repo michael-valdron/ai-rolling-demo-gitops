@@ -5,7 +5,15 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   rbac-policy.csv: |
-    p, role:default/mcp-admin, intelligent-assistant.mcp.manage, update, allow
-    g, user:default/jcollier, role:default/mcp-admin
-    g, user:default/mvaldron, role:default/mcp-admin
-    g, user:default/lucasyoon, role:default/mcp-admin
+    # --- Intelligent Assistant for RHDH permissions ---
+    p, role:default/intelligent-assistant-user, intelligent-assistant.chat, use, allow
+    p, role:default/intelligent-assistant-user, intelligent-assistant.notebooks, use, deny
+    p, role:default/intelligent-assistant-user, intelligent-assistant.mcp.tools, use, deny
+    p, role:default/intelligent-assistant-user, intelligent-assistant.skills, use, deny
+
+    # --- Catalog permissions (needed for MCP tools to query entities) ---
+    p, role:default/intelligent-assistant-user, catalog.entity.read, read, allow
+    p, role:default/intelligent-assistant-user, catalog.location.read, read, allow
+
+    # --- User → Role assignment ---
+    g, user:default/mvaldron, role:default/intelligent-assistant-user
