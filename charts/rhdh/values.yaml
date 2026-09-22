@@ -77,6 +77,10 @@ global:
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-ai-resource-extensions:bs_1.54.6__0.5.2
         disabled: false
 
+      # AI Catalog Plugin
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-catalog-backend-module-ai-model:bs_1.54.6__0.1.3
+        disabled: false
+
       # MCP Registry Provider Catalog Plugin
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-catalog-backend-module-mcp-registry-provider:bs_1.54.6__0.2.1
         disabled: false
