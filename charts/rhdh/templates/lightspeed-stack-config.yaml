@@ -28,15 +28,6 @@ data:
     inference:
       providers:
         - type: sentence_transformers
-        - type: vllm
-          id: vllm
-          api_key_env: VLLM_API_KEY
-          extra:
-            base_url: ${env.VLLM_URL:=}
-            max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
-            network:
-              tls:
-                verify: ${env.VLLM_TLS_VERIFY:=true}
         - type: openai
           id: openai
           api_key_env: OPENAI_API_KEY
